@@ -3,7 +3,7 @@
 
 ## <font style="color:rgb(31, 31, 31);">🚀</font><font style="color:rgb(31, 31, 31);"> 在线演示</font>
 
-[<font style="color:rgb(11, 87, 208);">点击这里查看 Live Demo</font>](https://liu18194025391-cloud.github.io/Smart-Elevator-Dispatch-System/)
+[<font style="color:rgb(11, 87, 208);">点击这里查看 Live Demo</font>](https://dongineer-l.github.io/Smart-Elevator-Dispatch-System/)
 
 ## <font style="color:rgb(31, 31, 31);">✨</font><font style="color:rgb(31, 31, 31);"> 核心特性</font>
 + **<font style="color:rgb(31, 31, 31);">⚡</font><font style="color:rgb(31, 31, 31);">️ 多线程架构</font>**<font style="color:rgb(31, 31, 31);">: 每一部电梯都在独立的 </font><font style="color:rgb(68, 71, 70);">Web Worker</font><font style="color:rgb(31, 31, 31);"> 线程中运行，互不阻塞，模拟真实的独立控制器。</font>
