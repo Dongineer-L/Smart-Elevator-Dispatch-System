@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>智能电梯调度系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      /* === 全局变量 === */
+      :root {
+        --bg-color: #eef2f5;
+        --building-bg: #ffffff;
+        --shaft-bg: #2c3e50;
+        --cabin-color: #34495e;
+        --cabin-door-closed: #95a5a6;
+        --cabin-door-open: #2ecc71; /* 开门灯光 */
+        --accent-color: #3498db;
+        --btn-active-color: #e74c3c;
+        --btn-active-glow: rgba(231, 76, 60, 0.6);
+        --text-color: #333;
+        --floor-height: 40px;
+      }
+
+      /* === 全局样式 === */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none; /* 防止频繁点击时选中文字 */
+      }
+
+      body {
+        background-color: var(--bg-color);
+        font-family: 'Roboto', sans-serif;
+        color: var(--text-color);
+        padding: 40px 20px;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+      }
+
+      #app {
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
+      }
+
+      /* === 大楼容器 === */
+      .building {
+        display: flex;
+        background: var(--building-bg);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+        border: 1px solid #dcdcdc;
+      }
+
+      /* === 左侧：楼层标尺 === */
+      .floors-container {
+        height: 400px; /* 10层 * 40px */
+        display: flex;
+        flex-direction: column-reverse;
+        width: 140px;
+        margin-right: 20px;
+        border-right: 2px solid #ecf0f1;
+      }
+
+      /* 单个楼层 */
+      .floor-label {
+        height: var(--floor-height);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-right: 15px;
+        border-bottom: 1px dashed #eee;
+      }
+    
+
+      .floor-number {
+        font-family: 'Roboto Mono', monospace;
+        font-size: 16px;
+        font-weight: bold;
+        color: #333535;
+        width: 40px;
+        text-align: center;
+      }
+
+      /* 外部按钮组 */
+      .button-group {
+        display: flex;
+        gap: 6px;
+      }
+
+      .up-btn, .down-btn {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 1px solid #464646;
+        background: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: #464646;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      }
+
+      .up-btn:hover, .down-btn:hover {
+        border-color: #999;
+        color: #666;
+        transform: scale(1.1);
+      }
+
+      /* 外部按钮激活状态：发光 */
+      .up-btn.active, .down-btn.active {
+        background-color: var(--btn-active-color);
+        color: white;
+        border-color: var(--btn-active-color);
+        box-shadow: 0 0 8px var(--btn-active-glow);
+      }
+
+      /* === 右侧：电梯井容器 === */
+      .shafts-container {
+        display: flex;
+        gap: 15px;
+      }
+
+      .elevator-column {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* 电梯井道 */
+      .shaft {
+        width: 70px;
+        height: 400px;
+        background-color: #00adff;
+        border-radius: 4px;
+        position: relative;
+        overflow: hidden; /* 防止轿厢溢出 */
+        box-shadow: inset 0 0 15px rgba(0,0,0,0.5); /* 内部阴影，制造深渊感 */
+        border: 1px solid #2c3e50;
+      }
+
+      /* 井道内的钢缆装饰（可选） */
+      .shaft::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: white;
+        transform: translateX(-50%);
+        z-index: 0;
+      }
+
+      /* 电梯轿厢 */
+      .cabin {
+        width: 100%;
+        height: 40px;
+        background: linear-gradient(135deg, #95a5a6, #7f8c8d); /* 金属质感 */
+        color: white;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        bottom: 0;
+        transition: transform 1s ease-in-out; 
+        z-index: 10;
+        border-top: 2px solid #bdc3c7;
+        border-bottom: 2px solid #555;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      }
+      
+      .cabin::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        bottom: 2px;
+        left: 50%;
+        width: 1px;
+      }
+
+      /* 开门状态：变为亮色（模拟内部灯光），并去掉中缝 */
+      .cabin.open {
+        background: #16f10f !important; /* 暖黄色灯光 */
+        color: #333;
+        font-weight: bold;
+        box-shadow: 0 0 15px #16f10f;
+        border: 1px solid #16f10f;
+      }
+      .cabin.open::after {
+        display: none; /* 开门时看不到门缝 */
+      }
+
+      /* === 控制面板区域 === */
+      .control-panels {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 0; /* 之前是负边距 */
+      }
+      
+      /* JS 生成的 .elevator-controls 会被插入这里，我们需要重新定位 */
+      /* 注意：你的 JS 是把 controls 放在 .elevator-column 里的 */
+      /* 下面的样式是针对 .elevator-column 内部的 controls */
+
+      .elevator-controls {
+        margin-top: 15px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        border-radius: 8px;
+        width: 90px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .floor-select {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 4px;
+        margin-bottom: 5px;
+      }
+      
+      .internal-floor-btn {
+        padding: 5px 0;
+        font-size: 10px;
+        cursor: pointer;
+        background: #f8f9fa;
+        border: 1px solid #dcdcdc;
+        border-radius: 3px;
+        color: #333;
+        transition: all 0.2s;
+      }
+      
+      .internal-floor-btn:hover {
+        background: #e9ecef;
+      }
+
+      .internal-floor-btn.active {
+        background: #f39c12; /* 内部按钮激活：橙色 */
+        color: white;
+        border-color: #e67e22;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .door-controls {
+        display: flex;
+        justify-content: space-between;
+        gap: 4px;
+        border-top: 1px solid #eee;
+        padding-top: 5px;
+      }
+      
+      .door-btn {
+        flex: 1;
+        font-size: 10px;
+        cursor: pointer;
+        padding: 4px 0;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 3px;
+      }
+      
+      .door-btn:hover {
+        background: #2980b9;
+      }
+      
+      .door-btn:active {
+        transform: translateY(1px);
+      }
+      
+      /* 添加每个控制面板的标题 */
+      .elevator-controls::before {
+        content: attr(data-elevator-id) "号梯控制";
+        display: block;
+        text-align: center;
+        font-size: 10px;
+        color: #424242;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 3px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="building">
+        <div class="floors-container"></div>
+        <div class="shafts-container"></div>
+      </div>
+      
+      </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
